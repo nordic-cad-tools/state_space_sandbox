@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 from divider_by_2.matrices import *
 from control import forced_response
+from divider_by_2.fixed_point import fixed_point
 
 # duration of each phase
 d1 = 1e-8
 d2 = 1e-8
 points = 10  # number of points per phase
-nb_period = 100  # number of period to simulate
+nb_period = 1000  # number of period to simulate
 
 # create the time vector for each phase
 t1 = np.linspace(0, d1, points)
@@ -32,8 +33,12 @@ for n in range(nb_period):
     x = np.concatenate((x, x_2), axis=1)
     y = np.concatenate((y, y_2), axis=0)
 
+x_0 = fixed_point([phase_1, phase_2], [d1, d2])
 # plot the state
 plt.figure()
 plt.plot(t, x[0], t, x[1])
 plt.plot(t, y)
+plt.plot(t[-1], x_0[0], "o")
+plt.plot(t[-1], x_0[1], "o")
+
 plt.show()
