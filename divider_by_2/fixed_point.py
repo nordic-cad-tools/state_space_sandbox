@@ -13,14 +13,13 @@ def fixed_point(phases, instants):
     det_A1 = round(det(phase_1.A))
     det_A2 = round(det(phase_2.A))
 
-
     # Identity matrix
     n, m = A1.shape
     I = eye(n, m)
 
     # duration of each phase
-    #d1 = 1e-8
-    #d2 = 1e-8
+    # d1 = 1e-8
+    # d2 = 1e-8
 
     # phi calculation
     phi_1 = expm(phase_1.A * d1)
@@ -35,7 +34,6 @@ def fixed_point(phases, instants):
         t = linspace(0, T, pt)
         result = apply_along_axis(f, 0, t.reshape(1, -1), A)
         return trapz(result, t)
-
 
     # gamma calculation
     # check for singularity
@@ -53,5 +51,3 @@ def fixed_point(phases, instants):
     # fixed point calculation
     X0 = dot(dot(inv(I - phi), gam), U)
     return X0
-
-
