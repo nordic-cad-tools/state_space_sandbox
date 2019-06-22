@@ -5,7 +5,7 @@ from divider_by_2.fixed_point import fixed_point
 from divider_by_2.find_steady_state import find_phase_duration
 
 # duration of each phase
-d1 = d2 = find_phase_duration([phase_1, phase_2], E= np.array([0,1]), set_point=0.7)
+d1 = d2 = find_phase_duration([phase_1, phase_2], E=np.array([0, 1]), set_point=0.7)
 points = 100  # number of points per phase
 nb_period = 10  # number of period to simulate
 
