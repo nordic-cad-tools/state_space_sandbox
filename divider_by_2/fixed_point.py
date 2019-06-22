@@ -1,15 +1,17 @@
 from divider_by_2.matrices import *
 import numpy as np
-from numpy import dot, eye, trapz, linspace, apply_along_axis
+from numpy import dot, eye, trapz, linspace, apply_along_axis, round
 from scipy.linalg import expm, det, inv
 
 
 # if Ai are not singular
 # used scipy instead of numpy, it gives ad results. Also need to use np.array and not matrix
-det_A1 = det(np.array(A1))
-det_A2 = det(phase_2.A)
+det_A1 = round(det(phase_1.A))
+det_A2 = round(det(phase_2.A))
+
+
 # Identity matrix
-n, m = phase_1.A.shape
+n, m = A1.shape
 I = eye(n, m)
 
 # duration of each phase
