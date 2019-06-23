@@ -5,16 +5,19 @@ from divider_by_2.fixed_point import fixed_point
 from divider_by_2.find_steady_state import find_phase_duration
 import numpy as np
 from numpy import dot, eye, trapz, linspace, apply_along_axis, round
-from scipy.linalg import expm, det, inv
+from scipy.linalg import expm, det, inv, logm, eig
 from scipy import signal
 import control
 
 # vector to get the output voltage
 E = np.array([0, 1])
 # duration of each phase
-d1 = d2 = find_phase_duration([phase_1, phase_2], E=E, set_point=0.7)
+# d1 = d2 = find_phase_duration([phase_1, phase_2], E=E, set_point=0.6)
 
-Ts = d1 + d2
+Fs = 10e6
+Ts = 1 / Fs
+d1 = d2 = Ts / 2
+# Ts = d1 + d2
 # if Ai are not singular
 # used scipy instead of numpy, it gives ad results. Also need to use np.array and not matrix
 det_A1 = round(det(phase_1.A))
@@ -67,35 +70,67 @@ gam_0 = dot(phi_2, gam_1) + gam_2
 gam_d = dot(dot(phi_2, (phase_1.A - phase_2.A)), X0d) + dot(phase_1.B - phase_2.B, U)
 gam_t = dot(phi_2, dot(phase_2.A, X0d) + dot(phase_2.B, U))
 
-# transfer function
-num = [1, 3, 3]
-den = [1, 2, 1]
 
 # H = C(zI - A)-1 B +D
 H = control.ss(phi_0, gam_0, E, D1, Ts)
-print(H)
-Hr = control.balred(H, 1, "truncate")
-print(Hr)
+# print(H)
+# H = control.balred(H, 2, "truncate")
+# print(Hr)
 
-mag, phase, w = control.bode(H)
-# plt.figure()
-# plt.semilogx(w, mag)    # Bode magnitude plot
-# plt.figure()
-# plt.semilogx(w, phase)  # Bode phase plot
-# plt.grid(True)
-# plt.show()
-# tzu = dot(E, inv())
-# output_args.Tzu=(HySimSys.E/(z*I-PHI0)*GAM0);
-# output_args.Tzd=(HySimSys.E/(z*I-PHI0)*GAMd);
-# output_args.Tzt=(HySimSys.E/(z*I-PHI0)*GAMt);
-# output_args.Tzf=-1*output_args.Tzt*OperatingPoint.T*OperatingPoint.T;
-#
-# method='Truncate';
-# output_args.rTzu=balred(output_args.Tzu, order, 'Elimination',method);
-# output_args.rTzd=balred(output_args.Tzd, order, 'Elimination',method);
-# output_args.rTzT=balred(output_args.Tzt, order, 'Elimination',method);
-# output_args.rTzF=balred(output_args.Tzf, order, 'Elimination',method);
-# output_args.Tcu=d2c(output_args.rTzu,z2s);
-# output_args.Tcd=d2c(output_args.rTzd,z2s);
-# output_args.TcT=d2c(output_args.rTzT,z2s);
-# output_args.TcF=d2c(output_args.rTzF,z2s);
+
+# convert to contrinuous using zoh method
+na, ma = H.A.shape
+nb, mb = H.B.shape
+d_mat = np.concatenate(
+    (
+        np.concatenate((H.A, H.B), axis=1),
+        np.concatenate((np.zeros_like(H.A), eye(nb, mb)), axis=1),
+    ),
+    axis=0,
+)
+c_mat = logm(d_mat) / Ts
+
+phi_0_c = c_mat[0:na, 0:ma]
+gam_0_c = c_mat[0:nb, ma:ma + mb]
+
+# create the continuous state space
+Hc = control.ss(phi_0_c, gam_0_c, E, D1)
+# extract frequency response for the 2 inputs
+w = np.logspace(3, 7)
+mag_d, phase_d, wo_d = H.freqresp(w)
+mag_c, phase_c, wo_c = Hc.freqresp(w)
+
+mag_c_1, mag_c_2 = 20 * np.log10(np.squeeze(mag_c))
+p_c_1, p_c_2 = np.rad2deg(np.squeeze(phase_c))
+
+mag_d_1, mag_d_2 = 20 * np.log10(np.squeeze(mag_d))
+p_d_1, p_d_2 = np.rad2deg(np.squeeze(phase_d))
+
+
+plt.figure()
+plt.subplot(211)
+plt.semilogx(wo_c, mag_c_2)
+plt.semilogx(wo_d, mag_d_2)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.subplot(212)
+plt.semilogx(wo_c, p_c_2)
+plt.semilogx(wo_d, p_d_2)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.figure()
+plt.subplot(211)
+plt.semilogx(wo_c, mag_c_1)
+plt.semilogx(wo_d, mag_d_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.subplot(212)
+plt.semilogx(wo_c, p_c_1)
+plt.semilogx(wo_d, p_d_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.show()
