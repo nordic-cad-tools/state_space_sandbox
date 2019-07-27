@@ -105,24 +105,17 @@ class HySy:
 
         # hybrid system simulation
         for n in range(nb_periods):
-            t_1, y_1, x_1 = forced_response(
-                sys=self.modes[0].to_ss(self.parameters),
-                T=t_vectors[0] + t[-1],
-                U=u_vectors[0],
-                X0=x[:, -1],
-            )
-            t = np.concatenate((t, t_1), axis=0)
-            x = np.concatenate((x, x_1), axis=1)
-            y = np.concatenate((y, y_1), axis=0)
-            t_2, y_2, x_2 = forced_response(
-                sys=self.modes[1].to_ss(self.parameters),
-                T=t_vectors[1] + t[-1],
-                U=u_vectors[1],
-                X0=x[:, -1],
-            )
-            t = np.concatenate((t, t_2), axis=0)
-            x = np.concatenate((x, x_2), axis=1)
-            y = np.concatenate((y, y_2), axis=0)
+
+            for mode, t_vector, u_vector in zip(self.modes, t_vectors, u_vectors):
+                t_i, y_i, x_i = forced_response(
+                    sys=mode.to_ss(self.parameters),
+                    T=t_vector + t[-1],
+                    U=u_vector,
+                    X0=x[:, -1],
+                )
+                t = np.concatenate((t, t_i), axis=0)
+                x = np.concatenate((x, x_i), axis=1)
+                y = np.concatenate((y, y_i), axis=0)
 
         return t, x, y
 
