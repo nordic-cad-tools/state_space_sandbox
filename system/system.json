@@ -1,0 +1,83 @@
+{
+  "name": "sw_cap_2_1",
+  "parameters": {
+    "ron": 10,
+    "cfly": 200e-12,
+    "cload": 10e-9},
+  "variables": {
+    "vin": 2,
+    "iload": 5e-3
+  },
+  "inputs": {
+
+  },
+  "U": {
+    "elements": {
+      "u11": "-1 / cfly / ron / 2",
+      "u21": "-1 / cload / ron / 2"},
+    "expression": "Matrix([u11, u21])"
+  },
+  "modes": [{
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "-1 / cfly / ron / 2",
+          "a21": "-1 / cload / ron / 2",
+          "a22": "-1 / cload / ron / 2"},
+        "expression": "Matrix([[a11, a12], [a21, a22]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "1 / cfly / ron / 2",
+          "b21": "-1 / cload",
+          "b22": "1 / cload / ron / 2"},
+        "expression": "Matrix([[b11, b12], [b21, b22]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "1"},
+        "expression": "Matrix([[c11, c12]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    },
+    {
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "1 / cfly / ron / 2",
+          "a21": "1 / cload / ron / 2",
+          "a22": "-1 / cload / ron / 2"},
+        "expression": "Matrix([[a11, a12], [a21, a22]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "0",
+          "b21": "-1 / cload",
+          "b22": "0"},
+        "expression": "Matrix([[b11, b12], [b21, b22]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "1"},
+        "expression": "Matrix([[c11, c12]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    }
+  ]
+}
+
+
