@@ -1,10 +1,14 @@
 from sympy import sympify, Matrix
 import json
 from json import JSONEncoder
+from control import StateSpace
+from control import forced_response
+import matplotlib.pyplot as plt
+
+import numpy as np
 
 
 class ModeMatrix:
-
     def __init__(self, elements, expression):
         """
         Mode matrix representation.
@@ -57,6 +61,14 @@ class Mode:
             "D": self.D.to_json(),
         }
 
+    def to_ss(self, parameters):
+        return StateSpace(
+            np.array(self.A.eval(parameters)).astype(np.float64),
+            np.array(self.B.eval(parameters)).astype(np.float64),
+            np.array(self.C.eval(parameters)).astype(np.float64),
+            np.array(self.D.eval(parameters)).astype(np.float64),
+        )
+
 
 class HySy:
     def __init__(self, name, parameters, modes):
@@ -77,17 +89,59 @@ class HySy:
         return {
             "name": self.name,
             "parameters": self.parameters,
-            "modes": [mode.to_json() for mode in self.modes]
+            "modes": [mode.to_json() for mode in self.modes],
         }
 
+    def transient(self, switching_instants, nb_periods, inputs=[], nb_points=10):
 
+        # create the time vector for each phase
+        t_vectors = [np.linspace(0, d, nb_points) for d in switching_instants]
+        # create the input vector for each phase
+        u_vectors = [np.array([np.ones_like(t) * i for i in inputs]) for t in t_vectors]
+        # initialization of vectors
+        t = np.zeros((1,))
+        x = np.zeros((2, 1))
+        y = np.zeros((1,))
+
+        # hybrid system simulation
+        for n in range(nb_periods):
+            t_1, y_1, x_1 = forced_response(
+                sys=self.modes[0].to_ss(self.parameters),
+                T=t_vectors[0] + t[-1],
+                U=u_vectors[0],
+                X0=x[:, -1],
+            )
+            t = np.concatenate((t, t_1), axis=0)
+            x = np.concatenate((x, x_1), axis=1)
+            y = np.concatenate((y, y_1), axis=0)
+            t_2, y_2, x_2 = forced_response(
+                sys=self.modes[1].to_ss(self.parameters),
+                T=t_vectors[1] + t[-1],
+                U=u_vectors[1],
+                X0=x[:, -1],
+            )
+            t = np.concatenate((t, t_2), axis=0)
+            x = np.concatenate((x, x_2), axis=1)
+            y = np.concatenate((y, y_2), axis=0)
+
+        return t, x, y
 
 if __name__ == "__main__":
     # load json file into sys
     with open("system.json", "r") as f:
         sys = json.load(f)
-    print(sys)
-    print(HySy.from_json(sys).to_json())
+    # print(sys)
+    # print(HySy.from_json(sys).to_json())
+    my_sys = HySy.from_json(sys)
+    # print(my_sys.modes[0].D.eval(my_sys.parameters))
+    # print(my_sys.modes[0].to_ss(my_sys.parameters))
+
+    t, x, y = my_sys.transient(switching_instants=[1e-8, 1e-8], nb_periods=50, inputs=[5e-3, 2])
+    plt.figure()
+    plt.plot(t, x[0], t, x[1])
+    plt.plot(t, y)
+    plt.show()
+
     # MODE = {
     #     "A": {
     #         "elements": {
