@@ -104,21 +104,23 @@ class HySy:
             "modes": [mode.to_json() for mode in self.modes],
         }
 
-
-    def transient(self, durations, nb_periods, inputs=[], nb_points=10):
-
+    def transient(self, durations=None, nb_periods=10, inputs=[], nb_points=10):
+        if durations is None:
+            durations = [mode.duration for mode in self.modes]
         # create the time vector for each phase
         t_vectors = [np.linspace(0, d, nb_points) for d in durations]
         # create the input vector for each phase
         u_vectors = [np.array([np.ones_like(t) * i for i in inputs]) for t in t_vectors]
+        # nb state in the system
+        n, m = self.modes[0].A.to_array(self.parameters).shape
         # initialization of vectors
         t = np.zeros((1,))
-        x = np.zeros((2, 1))
+        x = np.zeros((n, 1))
         y = np.zeros((1,))
 
         # hybrid system simulation
         for n in range(nb_periods):
-
+            print(f"period {n}")
             for mode, t_vector, u_vector in zip(self.modes, t_vectors, u_vectors):
                 t_i, y_i, x_i = forced_response(
                     sys=mode.to_ss(self.parameters),
@@ -176,7 +178,7 @@ class HySy:
             # singular matrix
             gam_i = [
                 dot(
-                    expm_int(m=mode.A.to_array(self.parameters), a=0, b=d, pt=100),
+                    expm_int(m=mode.A.to_array(self.parameters), a=0, b=d, pt=10000),
                     mode.B.to_array(self.parameters),
                 )
                 for phi_n, mode, d in zip(phi_i, self.modes, durations)
@@ -194,7 +196,6 @@ class HySy:
         return X0
 
     def find_mode_durations(self, E, set_point, inputs):
-
         def fun(duration, E, set_point, inputs):
             durations = [duration[0]] * self.nb_modes
             x0 = self.fixed_point(durations=durations, inputs=inputs)
@@ -211,7 +212,9 @@ class HySy:
 
 if __name__ == "__main__":
     # load json file into sys
-    with open("system.json", "r") as f:
+    # with open("system.json", "r") as f:
+    with open("sw_cap_2_1_x4.json", "r") as f:
+
         sys = json.load(f)
     # print(sys)
     # print(HySy.from_json(sys).to_json())
@@ -221,17 +224,21 @@ if __name__ == "__main__":
 
     U = np.array([[5e-3], [2]])
 
-    d = my_sys.find_mode_durations(inputs=U, E=np.array([0, 1]), set_point=0.7)
-    print(d)
-
-    x0 = my_sys.fixed_point(d, inputs=U)
+    # d = my_sys.find_mode_durations(inputs=U, E=np.array([0, 1]), set_point=0.7)
+    # print(d)
+    #
+    x0 = my_sys.fixed_point(inputs=U)
     print(x0)
-    t, x, y = my_sys.transient(durations=d, nb_periods=100, inputs=[5e-3, 2])
+    #
+    t, x, y = my_sys.transient(durations=None, nb_periods=200, inputs=[5e-3, 2])
     plt.figure()
-    plt.plot(t, x[0], t, x[1])
+    for xi in x:
+        plt.plot(t, xi)
     plt.plot(t, y)
-    plt.plot(t[-1], x0[0], "o")
-    plt.plot(t[-1], x0[1], "o")
+    for x0i in x0:
+        plt.plot(t[-1], x0i, "o")
+    # plt.plot(t[-1], x0[0], "o")
+    # plt.plot(t[-1], x0[1], "o")
     plt.show()
     # MODE = {
     #     "A": {

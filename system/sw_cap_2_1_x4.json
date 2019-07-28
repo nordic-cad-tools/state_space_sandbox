@@ -1,0 +1,273 @@
+{
+  "name": "sw_cap_2_1_x4",
+  "parameters": {
+    "ron": 40,
+    "cfly": 50e-12,
+    "cload": 10e-9,
+    "vin": 2,
+    "iload": 5e-3
+  },
+  "tran": {
+    "nb_periods": 100,
+    "nb_points": 10
+  },
+  "inputs": {
+    "elements": {
+      "u11": "iload",
+      "u21": "vin"},
+    "expression": "Matrix([u11, u21])"
+  },
+  "modes": [{
+      "duration": 0.25e-8,
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "0",
+          "a13": "0",
+          "a14": "0",
+          "a15": "-1 / cfly / ron / 2",
+          "a21": "0",
+          "a22":"-1 / cfly / ron / 2",
+          "a23": "0",
+          "a24": "0",
+          "a25": "1 / cfly / ron / 2",
+          "a31": "0",
+          "a32": "0",
+          "a33": "-1 / cfly / ron / 2",
+          "a34": "0",
+          "a35": "1 / cfly / ron / 2",
+          "a41": "0",
+          "a42": "0",
+          "a43": "0",
+          "a44": "-1 / cfly / ron / 2",
+          "a45": "-1 / cfly / ron / 2",
+          "a51": "-1 / cload / ron / 2",
+          "a52": "1 / cload / ron / 2",
+          "a53": "1 / cload / ron / 2",
+          "a54": "-1 / cload / ron / 2",
+          "a55": "-2 / cload / ron"},
+        "expression": "Matrix([[a11, a12, a13, a14, a15], [a21, a22, a23, a24, a25], [a31, a32, a33, a34, a35], [a41, a42, a43, a44, a45], [a51, a52, a53, a54, a55]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "1 / cfly / ron / 2",
+          "b21": "0",
+          "b22": "0",
+          "b31": "0",
+          "b32": "0",
+          "b41": "0",
+          "b42": "1 / cfly / ron / 2",
+          "b51": "-1 / cload",
+          "b52": "1 / cload / ron / 2"
+        },
+        "expression": "Matrix([[b11, b12], [b21, b22], [b31, b32], [b41, b42], [b51, b52]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "0",
+          "c13": "0",
+          "c14": "0",
+          "c15": "1"},
+        "expression": "Matrix([[c11, c12, c13, c14, c15]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    },
+    {
+      "duration": 0.25e-8,
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "0",
+          "a13": "0",
+          "a14": "0",
+          "a15": "-1 / cfly / ron / 2",
+          "a21": "0",
+          "a22":"-1 / cfly / ron / 2",
+          "a23": "0",
+          "a24": "0",
+          "a25": "-1 / cfly / ron / 2",
+          "a31": "0",
+          "a32": "0",
+          "a33": "-1 / cfly / ron / 2",
+          "a34": "0",
+          "a35": "1 / cfly / ron / 2",
+          "a41": "0",
+          "a42": "0",
+          "a43": "0",
+          "a44": "-1 / cfly / ron / 2",
+          "a45": "1 / cfly / ron / 2",
+          "a51": "-1 / cload / ron / 2",
+          "a52": "-1 / cload / ron / 2",
+          "a53": "1 / cload / ron / 2",
+          "a54": "1 / cload / ron / 2",
+          "a55": "-2 / cload / ron"
+        },
+        "expression": "Matrix([[a11, a12, a13, a14, a15], [a21, a22, a23, a24, a25], [a31, a32, a33, a34, a35], [a41, a42, a43, a44, a45], [a51, a52, a53, a54, a55]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "1 / cfly / ron / 2",
+          "b21": "0",
+          "b22": "1 / cfly / ron / 2",
+          "b31": "0",
+          "b32": "0",
+          "b41": "0",
+          "b42": "0",
+          "b51": "-1 / cload",
+          "b52": "1 / cload / ron / 2"},
+        "expression": "Matrix([[b11, b12], [b21, b22], [b31, b32], [b41, b42], [b51, b52]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "0",
+          "c13": "0",
+          "c14": "0",
+          "c15": "1"},
+        "expression": "Matrix([[c11, c12, c13, c14, c15]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    },
+        {
+      "duration": 0.25e-8,
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "0",
+          "a13": "0",
+          "a14": "0",
+          "a15": "1 / cfly / ron / 2",
+          "a21": "0",
+          "a22":"-1 / cfly / ron / 2",
+          "a23": "0",
+          "a24": "0",
+          "a25": "-1 / cfly / ron / 2",
+          "a31": "0",
+          "a32": "0",
+          "a33": "-1 / cfly / ron / 2",
+          "a34": "0",
+          "a35": "-1 / cfly / ron / 2",
+          "a41": "0",
+          "a42": "0",
+          "a43": "0",
+          "a44": "-1 / cfly / ron / 2",
+          "a45": "1 / cfly / ron / 2",
+          "a51": "1 / cload / ron / 2",
+          "a52": "-1 / cload / ron / 2",
+          "a53": "-1 / cload / ron / 2",
+          "a54": "1 / cload / ron / 2",
+          "a55": "-2 / cload / ron"
+        },
+        "expression": "Matrix([[a11, a12, a13, a14, a15], [a21, a22, a23, a24, a25], [a31, a32, a33, a34, a35], [a41, a42, a43, a44, a45], [a51, a52, a53, a54, a55]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "0",
+          "b21": "0",
+          "b22": "1 / cfly / ron / 2",
+          "b31": "0",
+          "b32": "1 / cfly / ron / 2",
+          "b41": "0",
+          "b42": "0",
+          "b51": "-1 / cload",
+          "b52": "1 / cload / ron / 2"
+        },
+        "expression": "Matrix([[b11, b12], [b21, b22], [b31, b32], [b41, b42], [b51, b52]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "0",
+          "c13": "0",
+          "c14": "0",
+          "c15": "1"},
+        "expression": "Matrix([[c11, c12, c13, c14, c15]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    },
+            {
+      "duration": 0.25e-8,
+      "A": {
+        "elements": {
+          "a11": "-1 / cfly / ron / 2",
+          "a12": "0",
+          "a13": "0",
+          "a14": "0",
+          "a15": "1 / cfly / ron / 2",
+          "a21": "0",
+          "a22":"-1 / cfly / ron / 2",
+          "a23": "0",
+          "a24": "0",
+          "a25": "1 / cfly / ron / 2",
+          "a31": "0",
+          "a32": "0",
+          "a33": "-1 / cfly / ron / 2",
+          "a34": "0",
+          "a35": "-1 / cfly / ron / 2",
+          "a41": "0",
+          "a42": "0",
+          "a43": "0",
+          "a44": "-1 / cfly / ron / 2",
+          "a45": "-1 / cfly / ron / 2",
+          "a51": "1 / cload / ron / 2",
+          "a52": "1 / cload / ron / 2",
+          "a53": "-1 / cload / ron / 2",
+          "a54": "-1 / cload / ron / 2",
+          "a55": "-2 / cload / ron"
+        },
+        "expression": "Matrix([[a11, a12, a13, a14, a15], [a21, a22, a23, a24, a25], [a31, a32, a33, a34, a35], [a41, a42, a43, a44, a45], [a51, a52, a53, a54, a55]])"
+      },
+      "B": {
+        "elements": {
+          "b11": "0",
+          "b12": "0",
+          "b21": "0",
+          "b22": "0",
+          "b31": "0",
+          "b32": "1 / cfly / ron / 2",
+          "b41": "0",
+          "b42": "1 / cfly / ron / 2",
+          "b51": "-1 / cload",
+          "b52": "1 / cload / ron / 2"
+        },
+        "expression": "Matrix([[b11, b12], [b21, b22], [b31, b32], [b41, b42], [b51, b52]])"
+      },
+      "C": {
+        "elements": {
+          "c11": "0",
+          "c12": "0",
+          "c13": "0",
+          "c14": "0",
+          "c15": "1"},
+        "expression": "Matrix([[c11, c12, c13, c14, c15]])"
+      },
+      "D": {
+        "elements": {
+          "d11": "0",
+          "d12": "0"},
+        "expression": "Matrix([[d11, d12]])"
+      }
+    }
+  ]
+}
+
+

@@ -3,21 +3,22 @@
   "parameters": {
     "ron": 10,
     "cfly": 200e-12,
-    "cload": 10e-9},
-  "variables": {
+    "cload": 10e-9,
     "vin": 2,
     "iload": 5e-3
   },
-  "inputs": {
-
+  "tran": {
+    "nb_periods": 100,
+    "nb_points": 10
   },
-  "U": {
+  "inputs": {
     "elements": {
-      "u11": "-1 / cfly / ron / 2",
-      "u21": "-1 / cload / ron / 2"},
+      "u11": "iload",
+      "u21": "vin"},
     "expression": "Matrix([u11, u21])"
   },
   "modes": [{
+      "duration": 0.5e-8,
       "A": {
         "elements": {
           "a11": "-1 / cfly / ron / 2",
@@ -48,6 +49,7 @@
       }
     },
     {
+      "duration": 0.5e-8,
       "A": {
         "elements": {
           "a11": "-1 / cfly / ron / 2",
