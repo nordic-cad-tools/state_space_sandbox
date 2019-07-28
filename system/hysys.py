@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import dot, eye, trapz, linspace, apply_along_axis, round
 from scipy.linalg import expm, det, inv
+from scipy.optimize import fsolve
 
 
 class ModeMatrix:
@@ -85,6 +86,7 @@ class HySy:
         self.name = name
         self.parameters = parameters
         self.modes = modes
+        self.nb_modes = len(self.modes)
 
     @classmethod
     def from_json(cls, data):
@@ -101,6 +103,7 @@ class HySy:
             "parameters": self.parameters,
             "modes": [mode.to_json() for mode in self.modes],
         }
+
 
     def transient(self, durations, nb_periods, inputs=[], nb_points=10):
 
@@ -129,13 +132,12 @@ class HySy:
 
         return t, x, y
 
-    def fixed_point(self, durations, inputs=[]):
-        matrices = [mode.matrices(self.parameters) for mode in self.modes]
+    def fixed_point(self, durations=None, inputs=[]):
+        if durations is None:
+            durations = [mode.duration for mode in self.modes]
         determinants = [
             round(det(mode.A.to_array(self.parameters))) for mode in self.modes
         ]
-        A1, B1, C1, D1 = self.modes[0].matrices(self.parameters)
-        A2, B2, C2, D2 = self.modes[1].matrices(self.parameters)
 
         # Identity matrix
         n, m = self.modes[0].A.to_array(self.parameters).shape
@@ -144,13 +146,11 @@ class HySy:
         # phi calculation
         phi = 1
         phi_i = [
-            expm(mode.A.to_array(self.parameters) * mode.duration)
-            for mode in self.modes
+            expm(mode.A.to_array(self.parameters) * d)
+            for mode, d in zip(self.modes, durations)
         ]
         for n, phi_n in enumerate(phi_i):
             phi = dot(phi_n, phi)
-        # for mode in self.modes:
-        #     phi = dot(expm(mode.A.to_array(self.parameters) * mode.duration), phi)
 
         # calculate the integral of exp matrix
         def expm_int(m, a, b, pt=100):
@@ -176,12 +176,10 @@ class HySy:
             # singular matrix
             gam_i = [
                 dot(
-                    expm_int(
-                        m=mode.A.to_array(self.parameters), a=0, b=mode.duration, pt=100
-                    ),
+                    expm_int(m=mode.A.to_array(self.parameters), a=0, b=d, pt=100),
                     mode.B.to_array(self.parameters),
                 )
-                for phi_n, mode in zip(phi_i, self.modes)
+                for phi_n, mode, d in zip(phi_i, self.modes, durations)
             ]
 
         gam = 0
@@ -194,6 +192,21 @@ class HySy:
         # fixed point calculation
         X0 = dot(dot(inv(I - phi), gam), inputs)
         return X0
+
+    def find_mode_durations(self, E, set_point, inputs):
+
+        def fun(duration, E, set_point, inputs):
+            durations = [duration[0]] * self.nb_modes
+            x0 = self.fixed_point(durations=durations, inputs=inputs)
+            return dot(E, x0 - set_point)[0]
+
+        d, info, ier, msg = fsolve(
+            fun, 1e-8, full_output=True, args=(E, set_point, inputs), xtol=1e-12
+        )
+        if ier == 1:
+            return [d[0]] * self.nb_modes
+        else:
+            raise RuntimeError
 
 
 if __name__ == "__main__":
@@ -208,15 +221,18 @@ if __name__ == "__main__":
 
     U = np.array([[5e-3], [2]])
 
-    x0 = my_sys.fixed_point([1e-8, 1e-8], inputs=U)
+    d = my_sys.find_mode_durations(inputs=U, E=np.array([0, 1]), set_point=0.7)
+    print(d)
+
+    x0 = my_sys.fixed_point(d, inputs=U)
     print(x0)
-    # t, x, y = my_sys.transient(durations=[1e-8, 1e-8], nb_periods=50, inputs=[5e-3, 2])
-    # plt.figure()
-    # plt.plot(t, x[0], t, x[1])
-    # plt.plot(t, y)
-    # plt.plot(t[-1], x0[0], "o")
-    # plt.plot(t[-1], x0[1], "o")
-    # plt.show()
+    t, x, y = my_sys.transient(durations=d, nb_periods=100, inputs=[5e-3, 2])
+    plt.figure()
+    plt.plot(t, x[0], t, x[1])
+    plt.plot(t, y)
+    plt.plot(t[-1], x0[0], "o")
+    plt.plot(t[-1], x0[1], "o")
+    plt.show()
     # MODE = {
     #     "A": {
     #         "elements": {
