@@ -9,6 +9,7 @@ import numpy as np
 from numpy import dot, eye, trapz, linspace, apply_along_axis, round
 from scipy.linalg import expm, det, inv
 
+
 class ModeMatrix:
     def __init__(self, elements, expression):
         """
@@ -45,6 +46,7 @@ class ModeMatrix:
     def to_array(self, parameters):
         return np.array(self.eval(parameters)).astype(np.float64)
 
+
 class Mode:
     def __init__(self, A, B, C, D, duration):
         self.A = ModeMatrix(**A)
@@ -67,10 +69,12 @@ class Mode:
         }
 
     def matrices(self, parameters):
-        return [np.array(self.A.eval(parameters)).astype(np.float64),
+        return [
+            np.array(self.A.eval(parameters)).astype(np.float64),
             np.array(self.B.eval(parameters)).astype(np.float64),
             np.array(self.C.eval(parameters)).astype(np.float64),
-            np.array(self.D.eval(parameters)).astype(np.float64)]
+            np.array(self.D.eval(parameters)).astype(np.float64),
+        ]
 
     def to_ss(self, parameters):
         return StateSpace(*self.matrices(parameters))
@@ -127,58 +131,65 @@ class HySy:
 
     def fixed_point(self, durations, inputs=[]):
         matrices = [mode.matrices(self.parameters) for mode in self.modes]
+        determinants = [
+            round(det(mode.A.to_array(self.parameters))) for mode in self.modes
+        ]
+        A1, B1, C1, D1 = self.modes[0].matrices(self.parameters)
+        A2, B2, C2, D2 = self.modes[1].matrices(self.parameters)
 
-        A1, B1, C1 ,D1 = self.modes[0].matrices(self.parameters)
-        A2, B2, C2 ,D2 = self.modes[1].matrices(self.parameters)
+        # Identity matrix
+        n, m = self.modes[0].A.to_array(self.parameters).shape
+        I = eye(n, m)
 
         # phi calculation
         phi = 1
-        for mode in self.modes:
-            phi = dot(expm(mode.A.to_array(self.parameters) * mode.duration), phi)
+        phi_i = [
+            expm(mode.A.to_array(self.parameters) * mode.duration)
+            for mode in self.modes
+        ]
+        for n, phi_n in enumerate(phi_i):
+            phi = dot(phi_n, phi)
+        # for mode in self.modes:
+        #     phi = dot(expm(mode.A.to_array(self.parameters) * mode.duration), phi)
 
-        print(phi)
-        # tempory soution for 2 phases system
-        d1, d2 = durations
-        # if Ai are not singular
-        # used scipy instead of numpy, it gives ad results. Also need to use np.array and not matrix
-        det_A1 = round(det(A1))
-        det_A2 = round(det(A2))
-
-        # Identity matrix
-        n, m = A1.shape
-        I = eye(n, m)
-
-        # duration of each phase
-        # d1 = 1e-8
-        # d2 = 1e-8
-
-        # phi calculation
-        phi_1 = expm(A1 * d1)
-        phi_2 = expm(A2 * d2)
-        phi = dot(phi_2, phi_1)
-        print(phi)
         # calculate the integral of exp matrix
-        def expm_int(A, T, pt=100):
+        def expm_int(m, a, b, pt=100):
+            def f(m, t):
+                return expm(m * t)
 
-            def f(A, t):
-                return expm(A * t)
-
-            t = linspace(0, T, pt)
-            result = apply_along_axis(f, 0, t.reshape(1, -1), A)
+            t = linspace(a, b, pt)
+            result = apply_along_axis(f, 0, t.reshape(1, -1), m)
             return trapz(result, t)
 
         # gamma calculation
         # check for singularity
-        if all([det_A1, det_A2]):
+        if all(determinants):
             # non singular matrix
-            gam_1 = dot(dot((phi_1 - I), inv(A1)), B1)
-            gam_2 = dot(dot((phi_2 - I), inv(A2)), B2)
+            gam_i = [
+                dot(
+                    dot((phi_n - I), inv(mode.A.to_array(self.parameters))),
+                    mode.B.to_array(self.parameters),
+                )
+                for phi_n, mode in zip(phi_i, self.modes)
+            ]
         else:
             # singular matrix
-            gam_1 = dot(expm_int(A1, d1), B1)
-            gam_2 = dot(expm_int(A2, d2), B2)
+            gam_i = [
+                dot(
+                    expm_int(
+                        m=mode.A.to_array(self.parameters), a=0, b=mode.duration, pt=100
+                    ),
+                    mode.B.to_array(self.parameters),
+                )
+                for phi_n, mode in zip(phi_i, self.modes)
+            ]
 
-        gam = dot(phi_2, gam_1) + gam_2
+        gam = 0
+        for k, gam_n in enumerate(gam_i):
+            phi_tmp = 1
+            for n, phi_n in enumerate(phi_i[:k:-1]):
+                phi_tmp = dot(phi_n, phi_tmp)
+            gam = dot(phi_tmp, gam_n) + gam
 
         # fixed point calculation
         X0 = dot(dot(inv(I - phi), gam), inputs)
@@ -198,7 +209,7 @@ if __name__ == "__main__":
     U = np.array([[5e-3], [2]])
 
     x0 = my_sys.fixed_point([1e-8, 1e-8], inputs=U)
-    # print(x0)
+    print(x0)
     # t, x, y = my_sys.transient(durations=[1e-8, 1e-8], nb_periods=50, inputs=[5e-3, 2])
     # plt.figure()
     # plt.plot(t, x[0], t, x[1])
