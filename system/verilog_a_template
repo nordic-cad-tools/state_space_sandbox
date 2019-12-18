@@ -1,0 +1,17 @@
+`include "constants.vams"
+`include "disciplines.vams"
+
+module {{ name }}(u, y, x, mode);
+
+{% for k, v in jsonobj.parameters.items() -%}
+parameter real {{ k }} = {{ v }};
+{% endfor %}
+
+
+
+input  [0:{{ (modes|length - 1).bit_length() - 1}}] mode;
+input  [0:{{ jsonobj["inputs"] | length }}] u;
+
+
+{{ jsonobj.modes }}
+

@@ -1,21 +1,19 @@
 {
-  "name": "sw_cap_2_1",
+  "name": "buck",
   "parameters": {
     "ron": 10,
     "cfly": 200e-12,
-    "cload": 10e-9
+    "cload": 10e-9,
+    "vin": 2,
+    "iload": 5e-3
   },
   "tran": {
     "nb_periods": 100,
     "nb_points": 10
   },
   "inputs": {
-    "parameters": {
-      "vin": 2,
-      "iload": 5e-3},
     "elements": {
       "u11": "iload",
-      "u21": "vin",
       "u21": "vin"},
     "expression": "Matrix([u11, u21])"
   },

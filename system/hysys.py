@@ -10,6 +10,25 @@ from numpy import dot, eye, trapz, linspace, apply_along_axis, round
 from scipy.linalg import expm, det, inv
 from scipy.optimize import fsolve
 
+from jinja2 import Environment, FileSystemLoader
+import os
+
+
+def render_template(template_file, context, output_dir, name):
+    """
+    Render a template with a context and save it into a file
+    :param template_file: name of the template to be used
+    :param context: context for rendering the template
+    :param output_dir: directory where to save the output
+    :param name: name of the output file
+    """
+    environment = Environment(
+        autoescape=False, loader=FileSystemLoader("."), trim_blocks=False
+    )
+    template_out = environment.get_template(template_file).render(context)
+    with open(os.path.join(output_dir, name), "w") as f:
+        f.write(template_out)
+
 
 class ModeMatrix:
     def __init__(self, elements, expression):
@@ -103,6 +122,26 @@ class HySy:
             "parameters": self.parameters,
             "modes": [mode.to_json() for mode in self.modes],
         }
+
+    def to_verilog_a(self, output_dir="."):
+        # context={
+        #     "input_bus":
+        # }
+
+        environment = Environment(
+            autoescape=False, loader=FileSystemLoader("."), trim_blocks=False
+        )
+        template_out = environment.get_template("verilog_a_template").render(jsonobj=self.to_json())
+        with open(os.path.join(output_dir, f"{self.name}.vla"), "w") as f:
+            f.write(template_out)
+
+
+        # render_template(
+        #     template_file="verilog_a_template",
+        #     context=self.to_json(),
+        #     output_dir=output_dir,
+        #     name=f"{self.name}.vla",
+        # )
 
     def transient(self, durations=None, nb_periods=10, inputs=[], nb_points=10):
         if durations is None:
@@ -212,34 +251,35 @@ class HySy:
 
 if __name__ == "__main__":
     # load json file into sys
-    # with open("system.json", "r") as f:
-    with open("sw_cap_2_1_x4.json", "r") as f:
+    with open("system.json", "r") as f:
+        # with open("sw_cap_2_1_x4.json", "r") as f:
 
         sys = json.load(f)
     # print(sys)
     # print(HySy.from_json(sys).to_json())
     my_sys = HySy.from_json(sys)
+    my_sys.to_verilog_a()
     # print(my_sys.modes[0].D.eval(my_sys.parameters))
     # print(my_sys.modes[0].to_ss(my_sys.parameters))
 
-    U = np.array([[5e-3], [2]])
-
-    # d = my_sys.find_mode_durations(inputs=U, E=np.array([0, 1]), set_point=0.7)
-    # print(d)
+    # U = np.array([[5e-3], [2]])
     #
-    x0 = my_sys.fixed_point(inputs=U)
-    print(x0)
-    #
-    t, x, y = my_sys.transient(durations=None, nb_periods=200, inputs=[5e-3, 2])
-    plt.figure()
-    for xi in x:
-        plt.plot(t, xi)
-    plt.plot(t, y)
-    for x0i in x0:
-        plt.plot(t[-1], x0i, "o")
-    # plt.plot(t[-1], x0[0], "o")
-    # plt.plot(t[-1], x0[1], "o")
-    plt.show()
+    # # d = my_sys.find_mode_durations(inputs=U, E=np.array([0, 1]), set_point=0.7)
+    # # print(d)
+    # #
+    # x0 = my_sys.fixed_point(inputs=U)
+    # print(x0)
+    # #
+    # t, x, y = my_sys.transient(durations=None, nb_periods=200, inputs=[5e-3, 2])
+    # plt.figure()
+    # for xi in x:
+    #     plt.plot(t, xi)
+    # plt.plot(t, y)
+    # for x0i in x0:
+    #     plt.plot(t[-1], x0i, "o")
+    # # plt.plot(t[-1], x0[0], "o")
+    # # plt.plot(t[-1], x0[1], "o")
+    # plt.show()
     # MODE = {
     #     "A": {
     #         "elements": {
