@@ -72,33 +72,40 @@ gam_t = dot(phi_2, dot(phase_2.A, X0d) + dot(phase_2.B, U))
 
 
 # H = C(zI - A)-1 B +D
-H = control.ss(phi_0, gam_0, E, D1, Ts)
+Hd = control.ss(phi_0, gam_0, E, D1, Ts)
+Hdn = control.ss(phi_0, gam_d, E, 0, Ts) * Ts
+HTn = control.ss(phi_0, gam_t, E, 0, Ts)
+Hfn = -1 * HTn * Ts ** 2
+# print(eig(phi))
 # print(H)
-# H = control.balred(H, 2, "truncate")
+# Hd = control.balred(Hd, 1, "truncate")
 # print(Hr)
 
 
 # convert to contrinuous using zoh method
-na, ma = H.A.shape
-nb, mb = H.B.shape
+na, ma = Hd.A.shape
+nb, mb = Hd.B.shape
 d_mat = np.concatenate(
     (
-        np.concatenate((H.A, H.B), axis=1),
-        np.concatenate((np.zeros_like(H.A), eye(nb, mb)), axis=1),
+        np.concatenate((Hd.A, Hd.B), axis=1),
+        np.concatenate((np.zeros_like(Hd.A), eye(nb, mb)), axis=1),
     ),
     axis=0,
 )
 c_mat = logm(d_mat) / Ts
 
 phi_0_c = c_mat[0:na, 0:ma]
-gam_0_c = c_mat[0:nb, ma:ma + mb]
+gam_0_c = c_mat[0:nb, ma : ma + mb]
 
 # create the continuous state space
 Hc = control.ss(phi_0_c, gam_0_c, E, D1)
 # extract frequency response for the 2 inputs
 w = np.logspace(3, 7)
-mag_d, phase_d, wo_d = H.freqresp(w)
+mag_d, phase_d, wo_d = Hd.freqresp(w)
 mag_c, phase_c, wo_c = Hc.freqresp(w)
+mag_dn, phase_dn, wo_dn = Hdn.freqresp(w)
+mag_fn, phase_fn, wo_fn = Hfn.freqresp(w)
+
 
 mag_c_1, mag_c_2 = 20 * np.log10(np.squeeze(mag_c))
 p_c_1, p_c_2 = np.rad2deg(np.squeeze(phase_c))
@@ -106,6 +113,12 @@ p_c_1, p_c_2 = np.rad2deg(np.squeeze(phase_c))
 mag_d_1, mag_d_2 = 20 * np.log10(np.squeeze(mag_d))
 p_d_1, p_d_2 = np.rad2deg(np.squeeze(phase_d))
 
+
+mag_dn_1 = 20 * np.log10(np.squeeze(mag_dn))
+p_dn_1 = np.rad2deg(np.squeeze(phase_dn))
+
+mag_fn_1 = 20 * np.log10(np.squeeze(mag_fn))
+p_fn_1 = np.rad2deg(np.squeeze(phase_fn))
 
 plt.figure()
 plt.subplot(211)
@@ -133,4 +146,29 @@ plt.semilogx(wo_d, p_d_1)
 plt.grid(b=True, which="major", color="#666666", linestyle="-")
 plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
 
+plt.figure()
+plt.subplot(211)
+plt.semilogx(wo_c, mag_dn_1)
+plt.semilogx(wo_d, mag_dn_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.subplot(212)
+plt.semilogx(wo_c, p_dn_1)
+plt.semilogx(wo_d, p_dn_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.figure()
+plt.subplot(211)
+plt.semilogx(wo_c, mag_fn_1)
+plt.semilogx(wo_d, mag_fn_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+
+plt.subplot(212)
+plt.semilogx(wo_c, p_fn_1)
+plt.semilogx(wo_d, p_fn_1)
+plt.grid(b=True, which="major", color="#666666", linestyle="-")
+plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
 plt.show()
